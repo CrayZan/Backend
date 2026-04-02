@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail'); // CAMBIO: Usamos SendGrid para evitar errores en Render
 const app = express();
 
 const port = process.env.PORT || 3000;
@@ -9,24 +9,17 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// 1. CONFIGURACIÓN DE MERCADO PAGO
+// 1. CONFIGURACIÓN DE SENDGRID
+// Reemplaza esto con la clave que empieza con SG que generaste
+sgMail.setApiKey('TU_API_KEY_DE_SENDGRID_AQUI'); 
+
+// 2. CONFIGURACIÓN DE MERCADO PAGO
 const client = new MercadoPagoConfig({ 
     accessToken: 'APP_USR-7683539587848277-032818-f1291f6337d7c4a7d3cb109814661361-3297988475' 
 });
 
-// 2. CONFIGURACIÓN DE CORREO (Ajustada para evitar Timeouts en Render)
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // Se activa el puerto seguro para evitar bloqueos de red
-    auth: {
-        user: 'albarracincristian470@gmail.com',
-        pass: 'xgndnhlnwtkxajex' 
-    }
-});
-
 app.get('/', (req, res) => {
-    res.send('Servidor del Hostal con Notificaciones Activas');
+    res.send('Servidor del Hostal con Notificaciones de SendGrid Activas');
 });
 
 // 3. RUTA PARA CREAR EL PAGO
@@ -64,11 +57,9 @@ app.post('/create_preference', async (req, res) => {
 // 4. RUTA DE NOTIFICACIÓN (Webhook)
 app.post('/webhook', async (req, res) => {
     const { query } = req;
+    const paymentId = query.id || query['data.id'];
     
-    // Mercado Pago envía notificaciones por ID de pago
-    if (query.type === 'payment' || query['data.id']) {
-        const paymentId = query.id || query['data.id'];
-        
+    if (paymentId) {
         try {
             const payment = await new Payment(client).get({ id: paymentId });
             
@@ -76,10 +67,10 @@ app.post('/webhook', async (req, res) => {
                 const customerEmail = payment.payer.email;
                 const monto = payment.transaction_amount;
 
-                // Enviar comprobante al cliente
-                await transporter.sendMail({
-                    from: '"Hostal del Milagro" <albarracincristian470@gmail.com>',
+                // CAMBIO: Estructura de mensaje para SendGrid
+                const msg = {
                     to: customerEmail,
+                    from: 'albarracincristian470@gmail.com', // El mail que verificaste en SendGrid
                     subject: '¡Reserva Confirmada! - Hostal del Milagro',
                     html: `
                         <div style="font-family: sans-serif; border: 2px solid #ea580c; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto;">
@@ -96,9 +87,12 @@ app.post('/webhook', async (req, res) => {
                             </p>
                             <p style="text-align: center; color: #666; font-size: 12px;">Hostal del Milagro - Salta, Argentina</p>
                         </div>
-                    `
-                });
-                console.log(`Email enviado con éxito a: ${customerEmail}`);
+                    `,
+                };
+
+                // Enviamos el correo usando SendGrid
+                await sgMail.send(msg);
+                console.log(`Email enviado con éxito vía SendGrid a: ${customerEmail}`);
             }
         } catch (error) { 
             console.error('Error procesando el pago o enviando el mail:', error); 
