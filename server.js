@@ -11,7 +11,7 @@ app.use(express.json());
 
 // 1. CONFIGURACIÓN DE SENDGRID
 // Reemplaza esto con la clave que empieza con SG que generaste
-sgMail.setApiKey('TU_API_KEY_DE_SENDGRID_AQUI'); 
+sgMail.setApiKey('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'); 
 
 // 2. CONFIGURACIÓN DE MERCADO PAGO
 const client = new MercadoPagoConfig({ 
