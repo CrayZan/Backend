@@ -17,7 +17,8 @@
     "jsonwebtoken": "^9.0.2",
     "express-validator": "^7.0.1",
     "uuid": "^9.0.1",
-    "mercadopago": "^2.0.6"
+    "mercadopago": "^2.0.6",
+    "@sendgrid/mail": "^8.1.0"
   },
   "engines": {
     "node": ">=18.0.0"
