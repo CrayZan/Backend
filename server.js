@@ -15,7 +15,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // 2. CONFIGURACIÓN DE MERCADO PAGO
 const client = new MercadoPagoConfig({ 
-    accessToken: 'APP_USR-7683539587848277-032818-f1291f6337d7c4a7d3cb109814661361-3297988475' 
+    accessToken: 'APP_USR-4808161788349309-032818-38c0434694d43883f4f75326a929a0b9-808413193' 
 });
 
 app.get('/', (req, res) => {
